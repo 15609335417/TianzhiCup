@@ -29,17 +29,21 @@ struct UTC
 
 struct satobs
 {
-	char obsType[6]; //02101标识地基测距，02401标识星间测距
-	char stationID[10] ;
-	char satlliteID[10];
+	int obsType;//02101标识地基测距，02401标识星间测距
+	int stationID;
+	int satlliteID;
+	//char obsType[6]; 
+	//char stationID[10] ;
+	//char satlliteID[10];
 	char obsSign[8];
 	UTC time;
 	double distance;//单位：KM，D向下取整为第一个整数，将D的小数部分乘1e9（10^9）取整为第二个整数
 	satobs()
 	{
-		memset(obsType, '\0', sizeof(obsType));
-		memset(stationID, '\0', sizeof(stationID));
-		memset(satlliteID, '\0', sizeof(satlliteID));
+		//memset(obsType, '\0', sizeof(obsType));
+		//memset(stationID, '\0', sizeof(stationID));
+		//memset(satlliteID, '\0', sizeof(satlliteID));
+		obsType = stationID = satlliteID = 0;
 		memset(obsSign, '\0', sizeof(obsSign));
 		distance = 0.0;
 	}
