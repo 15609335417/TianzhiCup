@@ -8,6 +8,70 @@
 
 using namespace std;
 
+/*********************
+* 字符串去掉空格
+* csdn
+**********************/
+//去除尾部空白字符 包括\t \n \r  
+/*
+标准的空白字符包括：
+' '     (0x20)    space (SPC) 空格符
+'\t'    (0x09)    horizontal tab (TAB) 水平制表符
+'\n'    (0x0a)    newline (LF) 换行符
+'\v'    (0x0b)    vertical tab (VT) 垂直制表符
+'\f'    (0x0c)    feed (FF) 换页符
+'\r'    (0x0d)    carriage return (CR) 回车符
+//windows \r\n linux \n mac \r
+*/
+char* rtrim(char* str)
+{
+	if (str == NULL || *str == '\0')
+	{
+		return str;
+	}
+
+	int len = strlen(str);
+	char* p = str + len - 1;
+	while (p >= str && isspace(*p))
+	{
+		*p = '\0';
+		--p;
+	}
+
+	return str;
+}
+
+
+//去除首部空格
+char* ltrim(char* str)
+{
+	if (str == NULL || *str == '\0')
+	{
+		return str;
+	}
+
+	int len = 0;
+	char* p = str;
+	while (*p != '\0' && isspace(*p))
+	{
+		++p;
+		++len;
+	}
+
+	memmove(str, p, strlen(str) - len + 1);
+
+	return str;
+}
+
+//去除首尾空格
+char* trim(char* str)
+{
+	str = rtrim(str);
+	str = ltrim(str);
+
+	return str;
+}
+
 void getFilesInFolder(const char* folderPath, list<string>& filePath)
 {
 	//读文件夹
@@ -22,6 +86,8 @@ void getFilesInFolder(const char* folderPath, list<string>& filePath)
 	while ((ent = readdir(dir)) != NULL) {//读取目录中的文件
 		memset(FilePath, '\0', 256);
 		if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)continue;//跳过"."和".."
+		if (strncmp(ent->d_name, "sat",3) == 0 || strncmp(ent->d_name, "sta",3) == 0)continue;//跳过"."和".."
+
 		//printf("%s%s\n", folderPath, ent->d_name);//输出文件名
 		strcat_s(FilePath, 256, folderPath);
 		strcat_s(FilePath, 256, ent->d_name);
@@ -32,6 +98,60 @@ void getFilesInFolder(const char* folderPath, list<string>& filePath)
 
 }
 
+void getFilesInFolder(const char* folderPath, list<string>& rFilePath,list<string>& sFilePath)
+{
+	//读文件夹
+	DIR* dir;
+	FILE* fl;
+	struct dirent* ent;
+	char buffer[256] = "";
+	char FilePath[256] = "";
+	if ((dir = opendir(folderPath)) == NULL)
+	{
+		printf("Can't open folder %s\n！", folderPath);
+		return;
+	}
+	while ((ent = readdir(dir)) != NULL) {//读取目录中的文件
+		memset(FilePath, '\0', 256);
+		// s File
+		if (strncmp(ent->d_name, "sat", 3) == 0)
+		{
+			printf("%s%s\n", folderPath, ent->d_name);//输出文件名
+			sprintf_s(FilePath, "%s%s", folderPath, ent->d_name);
+			if (fopen_s(&fl, FilePath, "r+b"))
+				printf("Can't open observation data file name list %s !", FilePath);
+			while (!feof(fl))
+			{
+				fgets(buffer, 256, fl);
+				memset(FilePath, '\0', 256);
+				sprintf_s(FilePath, "%s%s", folderPath, buffer);
+				trim(FilePath);
+				sFilePath.push_back(FilePath);
+			}
+			fclose(fl);
+		}
+		// r File
+		else if (strncmp(ent->d_name, "sta", 3) == 0)
+		{
+			printf("%s%s\n", folderPath, ent->d_name);//输出文件名
+			sprintf_s(FilePath, "%s%s", folderPath, ent->d_name);
+			if (fopen_s(&fl, FilePath, "r+b"))
+				printf("Can't open observation data file name list %s !", FilePath);
+			while (!feof(fl))
+			{
+				fgets(buffer, 256, fl);
+				memset(FilePath, '\0', 256);
+				sprintf_s(FilePath, "%s%s", folderPath, buffer);
+				trim(FilePath);
+				rFilePath.push_back(FilePath);
+			}
+			fclose(fl);
+		}
+		else continue;
+	}
+	closedir(dir);//关闭目录
+
+}
 
 int main()
 {
@@ -41,10 +161,12 @@ int main()
 	vector<int> satlliteID;
 	vector<char[256]> _filePath;
 	list<string> filePath;
-
-	const char* folderPath = "data\\obsdat\\";
-
+	list<string> rFilePath;
+	list<string> sFilePath;
+	const char* folderPath = "data\\1\\obsdat\\";
+	getFilesInFolder(folderPath, rFilePath, sFilePath);
 	getFilesInFolder(folderPath, filePath);
+	//auto it = filePath.begin();
 	auto it = filePath.begin();
 	int num = 0;
 	for (; it != filePath.end(); it++)
@@ -82,11 +204,12 @@ int main()
 		}
 		stationID.push_back(data.stationID);
 		satlliteID.push_back(data.satlliteID);
+		printf("%s\n", FilePath);
 		fclose(obsFile);
 
-		num++;
-		if (num > 600)
-			break;
+		//num++;
+		//if (num > 600)
+		//	break;
 	}
 
 	//读文件夹
